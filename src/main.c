@@ -1781,7 +1781,7 @@ int main(int argc, char* argv[]) {
 
 
     if (argc < 2){
-        printf("usage: ./app input.png [output.png]\n");
+        printf("usage: ./tri input.png [output.png]\n");
         exit(1);
     }
 
