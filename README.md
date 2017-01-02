@@ -65,13 +65,13 @@ The following options control the visualization
 | q | quit |
 
 # Sample output
-Input image
+### Input image
 ![input sample](https://raw.github.com/freemanjustin/triangle/master/bin/zooey.png)
 
-sample debug output (out.png in the instructions above) (you can ignore this, and yes it writes it upside down!)
+### sample debug output (out.png in the instructions above) (you can ignore this, and yes it writes it upside down!)
 ![debug sample2](https://raw.github.com/freemanjustin/triangle/master/bin/debug.png)
 
-Sample visualisation
+### Sample visualisation
 ![triangle sample3](https://raw.github.com/freemanjustin/triangle/master/bin/sample1.png)
 ![triangle sample3](https://raw.github.com/freemanjustin/triangle/master/bin/sample2.png)
 ![triangle sample3](https://raw.github.com/freemanjustin/triangle/master/bin/sample3.png)
