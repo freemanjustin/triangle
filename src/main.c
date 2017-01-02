@@ -74,6 +74,7 @@ int     do_random = 0;
 int     do_wireframe = 0;
 int     do_textureMap = 0;
 int     do_grayScale = 0;
+int     drawMode = 0;
 
 GLuint  texture[10];
 
@@ -1318,8 +1319,10 @@ glPolygonMode(GL_BACK, GL_FILL);
             glEnable( GL_MULTISAMPLE_ARB );
 
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    glDrawArrays(GL_TRIANGLES, 0, 3*nTri);
-    //glDrawArrays(GL_TRIANGLE_STRIP,0,3*nTri);
+    if(drawMode==0)
+        glDrawArrays(GL_TRIANGLES, 0, 3*nTri);
+    else
+        glDrawArrays(GL_TRIANGLE_STRIP,0,3*nTri);
 
 
     //case ALIAS_MODE_ANTIALIASED:
@@ -1711,6 +1714,16 @@ void keys( unsigned char key, int x, int y )
     }
 
     //If the user presses q
+    if(key == 'q'){
+        exit(0);
+    }
+    
+    //If the user presses '\' change the drawing mode
+    if(key == '/'){
+        drawMode = !drawMode;
+        update_resources();
+    }
+    
     if( key == 'a' )
     {
 		//Cycle alias mode
