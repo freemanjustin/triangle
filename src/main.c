@@ -69,12 +69,14 @@ GLint uniform_fade;
 
 float cur_fade = 0.5;//sinf(glutGet(GLUT_ELAPSED_TIME) / 1000.0 * (2*3.14) / 5) / 2 + 0.5; // 0->1->0 every 5 seconds
 float     edge_precent = 1.0;
+float   gap_amount = 0.1;
 int     do_border = 1;
 int     do_random = 0;
 int     do_wireframe = 0;
 int     do_textureMap = 0;
 int     do_grayScale = 0;
 int     drawMode = 0;
+int     drawGaps = 0;
 
 GLuint  texture[10];
 
@@ -113,9 +115,9 @@ pts     *polygon;
 vcolor  *vertex_color;
 int     nTri = 8;
 int     nTriVert;
-int     nPts = 3000;
+int     nPts = 4000;
 int     **edges;
-int     min_edge_value = 20;
+int     min_edge_value = 100;
 float   area_threshold = 3000;
 
 AliasMode gMode = ALIAS_MODE_MULTISAMPLE;
@@ -1179,6 +1181,7 @@ void update_resources(){
         */
 
         process_triangle_poly(polygon, vertex_color);    // find out what pixels are in this triangle
+        
 
         triangle_attributes[i].v_color[0] = vertex_color->r;
         triangle_attributes[i].v_color[1] = vertex_color->g;
@@ -1199,6 +1202,75 @@ void update_resources(){
         triangle_attributes[i+1].tex_coord[1] = 0.0;
         triangle_attributes[i+2].tex_coord[0] = 1.0;
         triangle_attributes[i+2].tex_coord[1] = 0.0;
+    }
+
+
+
+    // experimental rescalng of triangles
+    // trying to get some gaps in em....
+    if(drawGaps){
+        //l = 0;
+        float   centroidX;
+        float   centroidY;
+        float   angle;
+        float   dx, dy;
+        
+        for(i=0;i<nTriVert;i+=3){
+            
+            /*
+            printf("# pre: triangle %d has vertices = (%f, %f), (%f,%f), (%f,%f)\n",l, 
+                triangle_attributes[i].coord2d[0], triangle_attributes[i].coord2d[1],
+                triangle_attributes[i+1].coord2d[0], triangle_attributes[i+1].coord2d[1],
+                triangle_attributes[i+2].coord2d[0], triangle_attributes[i+2].coord2d[1]
+                );
+            */
+            centroidX = (triangle_attributes[i].coord2d[0] + triangle_attributes[i+1].coord2d[0] + triangle_attributes[i+2].coord2d[0])/3.0;
+            centroidY = (triangle_attributes[i].coord2d[1] + triangle_attributes[i+1].coord2d[1] + triangle_attributes[i+2].coord2d[1])/3.0;
+
+            //centroidX += rand_in_range(-0.01,0.01);
+            //printf("centroid for this triangle is %f, %f\n", centroidX, centroidY);
+            // shift vertices towards centroid
+            // this is correct!
+            angle = atan2(triangle_attributes[i].coord2d[1]-centroidY, triangle_attributes[i].coord2d[0]-centroidX);
+
+            // this is only using the x xoord which is wrong, but gives a nice result!
+            //angle = atan2(triangle_attributes[i].coord2d[0]-centroidY, triangle_attributes[i].coord2d[0]-centroidX);
+            //printf("angle is %f\n", angle);
+            dx = cos(angle) * gap_amount ;
+            dy = sin(angle) * gap_amount ; 
+            //printf("gap = %f, dx = %f, dy = %f\n", gap_amount, dx, dy);
+
+            triangle_attributes[i].coord2d[0] -= dx;
+            triangle_attributes[i].coord2d[1] -= dy;
+
+
+            // shift vertices towards centroid
+            angle = atan2(triangle_attributes[i+1].coord2d[0]-centroidY, triangle_attributes[i+1].coord2d[0]-centroidX);
+            dx = cos(angle) * gap_amount;
+            dy = sin(angle) * gap_amount; 
+
+            triangle_attributes[i+1].coord2d[0] -= dx;
+            triangle_attributes[i+1].coord2d[1] -= dy;
+
+            // shift vertices towards centroid
+            angle = atan2(triangle_attributes[i+2].coord2d[0]-centroidY, triangle_attributes[i+2].coord2d[0]-centroidX);
+            dx = cos(angle) * gap_amount;
+            dy = sin(angle) * gap_amount; 
+
+            triangle_attributes[i+2].coord2d[0] -= dx;
+            triangle_attributes[i+2].coord2d[1] -= dy;
+
+            /*
+            printf("# post: triangle %d has vertices = (%f, %f), (%f,%f), (%f,%f)\n",l, 
+                triangle_attributes[i].coord2d[0], triangle_attributes[i].coord2d[1],
+                triangle_attributes[i+1].coord2d[0], triangle_attributes[i+1].coord2d[1],
+                triangle_attributes[i+2].coord2d[0], triangle_attributes[i+2].coord2d[1]
+                );
+
+            printf("\n\n");
+            l++;
+            */
+        }
     }
 
     glBufferData(GL_ARRAY_BUFFER, nTriVert*sizeof(attributes), triangle_attributes, GL_STATIC_DRAW);
@@ -1296,7 +1368,7 @@ if(do_textureMap == 1){
 */
 
 
-/*
+
   // Push each element in buffer_vertices to the vertex shader
   glDrawArrays(GL_TRIANGLES, 0, 3*nTri);
 
@@ -1310,7 +1382,7 @@ glDrawArrays(GL_TRIANGLES, 0, 3*nTri);
 // Turn off wireframe mode
 glPolygonMode(GL_FRONT, GL_FILL);
 glPolygonMode(GL_BACK, GL_FILL);
-*/
+
 
     //case ALIAS_MODE_MULTISAMPLE:
             glDisable( GL_LINE_SMOOTH );
@@ -1319,8 +1391,9 @@ glPolygonMode(GL_BACK, GL_FILL);
             glEnable( GL_MULTISAMPLE_ARB );
 
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    if(drawMode==0)
+    if(drawMode==0){
         glDrawArrays(GL_TRIANGLES, 0, 3*nTri);
+    }
     else
         glDrawArrays(GL_TRIANGLE_STRIP,0,3*nTri);
 
@@ -1330,10 +1403,11 @@ glPolygonMode(GL_BACK, GL_FILL);
 			glEnable( GL_POLYGON_SMOOTH );
             glDisable( GL_MULTISAMPLE );
 
+/*
     glLineWidth(1.0f);
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glDrawArrays(GL_TRIANGLES, 0, 3*nTri);
-    //glDrawArrays(GL_TRIANGLE_STRIP,0,3*nTri);
+*/
 
   glDisableVertexAttribArray(attribute_coord2d);
   glDisableVertexAttribArray(attribute_v_color);
@@ -1721,6 +1795,19 @@ void keys( unsigned char key, int x, int y )
     //If the user presses '\' change the drawing mode
     if(key == '/'){
         drawMode = !drawMode;
+        update_resources();
+    }
+    if(key == 'k'){
+        drawGaps = !drawGaps;
+        update_resources();
+    }
+    
+    if(key == 'j'){
+        gap_amount +=0.005;
+        update_resources();
+    }
+    if(key == 'J'){
+        gap_amount -=0.005;
         update_resources();
     }
     
